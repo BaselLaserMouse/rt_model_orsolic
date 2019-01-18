@@ -1,0 +1,25 @@
+[[source]]
+verify_ssl = true
+url = "https://pypi.org/simple"
+name = "pypi"
+
+[requires]
+python_version = "3.5"
+
+[packages]
+numpy = "*"
+scipy = "*"
+pandas = "*"
+scikit-learn = "*"
+matplotlib = "*"
+seaborn = "*"
+defopt = "*"
+statsmodels = "*"
+snakemake = "*"
+tensorflow-gpu = "==1.9.0"
+gpflow = "*"
+
+[dev-packages]
+ipython = "*"
+pdbpp = "*"
+line-profiler = "*"
