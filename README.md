@@ -1,7 +1,8 @@
-# Reaction-time modeling
+# Reaction-time modeling with Gaussian process models
 
 This repository contains code to analysis reaction-time from experimental data
 collected by Ivana Orsolici.
+
 TODO mention paper, link to it
 
 
@@ -39,23 +40,32 @@ You can either:
   figures, ...)
 - run any of the python scripts in `src` folder to test different parameters.
 
+Scripts have a `-h/--help` flag to provide more information about the available
+options, expected input files and output files.
+
 TODO how to retrieve data, where to put it
-TODO mention `-h` option of scripts
 
 
 ## Code organisation
 
 Provided scripts in `src` folder are:
 
+- `plot_draft_paper.py` generates the figures for the paper,
 - `gp_fit.py` fits the parameters of a Gaussian process model on behavioral
   data,
-- `gp_predict.py` estimates predictive hazard rates from fitted models,
+- `gp_predict.py` estimates predictive distributions from fitted models,
 - `gp_score.py` computes scores for different models and output figures for
   comparison purpose,
 - `gp_ppc.py` samples from the models to check if they realistically capture
   the behavior,
+- `gp_convert.py` transforms models with variational posteriors for the kernel
+  hyperparameters into models with point estimates, 
+- `show_posterior.py` displays the variational posterior distributions of the
+  kernel hyperparameters,
+- `gp_advi_example.py` is a dummy example of a GP model with ADVI inference
+  applied on the kernel hyperparameters.
 
-TODO complete the list, mention script to plot paper figures
+The remaining `.py` files are modules containing common code.
 
 
 ## Troubleshooting
