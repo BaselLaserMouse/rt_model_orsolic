@@ -9,6 +9,7 @@ import seaborn as sb
 import defopt
 
 from gp_ppc import load_data
+from scipy.stats import gaussian_kde
 
 
 def plot_psycho(dset_pred, ax, label):
@@ -51,7 +52,6 @@ def plot_chrono(dset_pred, period, ax):
 
 def plot_rt_cdf(dset_pred, rt_range, period, color, ax):
     """plot cumulative density function for reaction time"""
-    #dset_pred = dset_pred[dset_pred.rt > 20]
     sample_groups = dset_pred[~dset_pred['miss']].groupby('sample_id')
     cdf_pred = np.zeros((len(sample_groups), len(rt_range)))
     for i, (_, group) in enumerate(sample_groups):
@@ -66,35 +66,21 @@ def plot_rt_cdf(dset_pred, rt_range, period, color, ax):
                     color=color, edgecolor=color)
     ax.plot(rt_test_sec, cdf_mean, alpha=0.8, color=color)
 
-
-def plot_early_lick_hazard(dset_pred, rt_bins, period, color, ax):
-    sample_groups = dset_pred.groupby('sample_id')
-    hazard_pred = np.zeros((len(sample_groups), len(rt_bins)-1))
+def plot_rt_kde(dset_pred, rt_range, period, color, ax):
+    """plot cumulative density function for reaction time"""
+    sample_groups = dset_pred[~dset_pred['miss']].groupby('sample_id')
+    kde_pred = np.zeros((len(sample_groups), len(rt_range)))
     for i, (_, group) in enumerate(sample_groups):
-        hazard_pred[i] = get_early_lick_hazard(group, rt_bins)
+        kernel = gaussian_kde(group.rt.values)
+        kde_pred[i] = kernel(rt_range).T
 
-    hazard_perc = np.percentile(hazard_pred, [2.5, 97.5], axis=0)
-    hazard_mean = hazard_pred.mean(0)
+    kde_perc = np.percentile(kde_pred, [2.5, 97.5], axis=0)
+    kde_median = np.median(kde_pred, axis=0)
 
-    rt_bins_sec = rt_bins[1:] * period
-    ax.fill_between(rt_bins_sec, hazard_perc[0], hazard_perc[1], alpha=0.3,
-                    lw=0, color=color, edgecolor=color)
-    ax.plot(rt_bins_sec, hazard_mean, alpha=0.8, color=color)
-
-
-def get_early_lick_hazard(dset, rt_bins):
-    rt = np.sort(dset[dset['early']]['rt'].values)
-
-    licks_test, _ = np.histogram(rt, bins=rt_bins)
-    changes_hit, _ = np.histogram(dset[dset['hit']]['change'].values, bins=rt_bins)
-    changes_miss, _ = np.histogram(dset[dset['miss']]['change'].values, bins=rt_bins)
-
-    completed_trials = np.append(0, np.cumsum(changes_hit[:-1])) + \
-        np.append(0, np.cumsum(changes_miss[:-1])) + \
-        np.append(0, np.cumsum(licks_test[:-1]))
-    total_trials = dset.shape[0]
-    licks_hazard = licks_test / (total_trials - completed_trials)
-    return licks_hazard
+    rt_test_sec = rt_range * period
+    ax.fill_between(rt_test_sec, kde_perc[0], kde_perc[1], alpha=0.3, lw=0,
+                    color=color, edgecolor=color)
+    ax.plot(rt_test_sec, kde_median, alpha=0.8, color=color)
 
 
 def plot_psycho_chrono(dset_test, dset_gp, filters, axes, early_licks):
@@ -152,20 +138,23 @@ def plot_psycho_chrono(dset_test, dset_gp, filters, axes, early_licks):
         dset_test = dset_test[dset_test['early']]
         dset_gp = dset_gp[dset_gp['early']]
 
-    #dset_test = dset_test[dset_test.rt > 20]
     for i, (hazard, dset_group) in enumerate(dset_test.groupby('hazard')):
         rt_range = np.linspace(0, 16, num=161) / period
         rt_test = np.sort(dset_group[~dset_group['miss']]['rt'].values)
         cdf_test = np.mean(rt_test[:, np.newaxis] <= rt_range, axis=0)
+        
+        kernel = gaussian_kde(rt_test)
+        kde_test = kernel(rt_range)
 
-        axes[2].plot(rt_range * period, cdf_test, '--',
-                     dashes=(4, 4), color=cmap[i])  # TODO use markers?
-        plot_rt_cdf(dset_gp[dset_gp.hazard == hazard], rt_range, period,
+        axes[2].plot(rt_range * period, kde_test, '--',
+                     dashes=(4, 4), color=cmap[i]) 
+        plot_rt_kde(dset_gp[dset_gp.hazard == hazard], rt_range, period,
                     color=cmap[i], ax=axes[2])
 
     axes[2].set_xlabel('Time from stimulus onset (s)')
-    axes[2].set_ylabel('Cumul. lick proportion')
-    axes[2].set_ylim(0, 1)
+    axes[2].set_ylabel('Early lick density')
+    ylim = axes[2].get_ylim()
+    axes[2].set_ylim(0, ylim[1])
     axes[2].set_xlim(0, 16)
     axes[2].xaxis.set_major_locator(ticker.MultipleLocator(5))
 
@@ -173,15 +162,13 @@ def plot_psycho_chrono(dset_test, dset_gp, filters, axes, early_licks):
     xs = np.arange(len(filters)) * period
     axes[3].axhline(0, color='0.6', linestyle='--')
     axes[3].plot(xs, filters[:, 0], sb.xkcd_rgb['dark mauve'])
-    axes[3].plot(xs, filters[:, 1], sb.xkcd_rgb['faded green'])
+    axes[3].plot(xs, filters[:, 1], sb.xkcd_rgb['pine green'])
+    axes[3].plot(xs, filters[:, 2], sb.xkcd_rgb['faded green'])
+
     axes[3].set_ylabel('Weight')
     axes[3].set_xlabel('Time lag (s)')
     axes[3].set_xlim(0, 2.5)
-    #axes[3].set_ylim(-0.25, 0.5)
-    #axes[3].yaxis.set_major_locator(ticker.MultipleLocator(0.25))
     axes[3].xaxis.set_major_locator(ticker.MultipleLocator(0.5))
-    #axes[3].set_yticks([-.25, 0, .5])
-    #return fig, axes
 
 
 def load_filters(model_path):
@@ -232,15 +219,15 @@ def main(fname, *, supplement=False, early_licks=False, all_splits=False):
         models = [
             'IO_075__constant__matern52__proj_wtime__ard',
             'IO_078__constant__matern52__proj_wtime__ard',
-            'IO_079__constant__matern52__proj_wtime__ard',
+            'IO_080__constant__matern52__proj_wtime__ard',
             'IO_081__constant__matern52__proj_wtime__ard',
             'IO_083__constant__matern52__proj_wtime__ard'
         ]
     else:
         models = [
-            'IO_080__constant__matern52__proj_wtime__ard',
-            'IO_080__constant__matern52__proj__ard',
-            'IO_080__constant__matern52__wtime'
+            'IO_079__constant__matern52__proj_wtime__ard',
+            'IO_079__constant__matern52__proj__ard',
+            'IO_079__constant__matern52__wtime'
         ]
 
     fig, axes = plt.subplots(
@@ -249,20 +236,10 @@ def main(fname, *, supplement=False, early_licks=False, all_splits=False):
 
     for idx, model in enumerate(models):
         # define input models
-        gp_path = Path('results_new', model)
+        gp_path = Path('results', model)
 
         # fix random seed for reproducibitity
         np.random.seed(1234)
-
-        # load model, make predictions and get filters
-        # dset, _ = load_data(
-        #     gp_path / 'predictions.pickle', 1, ('test', 'train', 'val')
-        # )
-
-        # print(model, 
-        #     'train', sum(dset['train']), sum(dset[dset.hazard != 'nonsplit']['train']),
-        #     'val', sum(dset['val']), sum(dset[dset.hazard != 'nonsplit']['val']),
-        #     'test', sum(dset['test']), sum(dset[dset.hazard != 'nonsplit']['test']))
 
         # load model, make predictions and get filters
         if all_splits:
@@ -281,7 +258,7 @@ def main(fname, *, supplement=False, early_licks=False, all_splits=False):
         if 'proj' in model_opts['kernels_input']:
             gp_filters = load_filters(gp_path / 'model')
         else:
-            gp_filters = np.full((2, 2), np.nan)
+            gp_filters = np.full((2, 3), np.nan)
 
         # create the figure and save it
         if axes.ndim > 1:
