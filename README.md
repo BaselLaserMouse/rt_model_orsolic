@@ -43,8 +43,10 @@ You can either:
 Scripts have a `-h/--help` flag to provide more information about the available
 options, expected input files and output files.
 
-TODO how to retrieve data, where to put it
-
+To reproduce the figures from the paper, you will also need the corresponding
+data available on [figshare](https://figshare.com/s/45f53f720d75498ac3c4).
+Unzip the `data` and `results` folders directly in the same folder as this
+repository.
 
 ## Code organisation
 
