@@ -66,6 +66,7 @@ def plot_rt_cdf(dset_pred, rt_range, period, color, ax):
                     color=color, edgecolor=color)
     ax.plot(rt_test_sec, cdf_mean, alpha=0.8, color=color)
 
+
 def plot_rt_kde(dset_pred, rt_range, period, color, ax):
     """plot cumulative density function for reaction time"""
     sample_groups = dset_pred[~dset_pred['miss']].groupby('sample_id')
@@ -111,7 +112,7 @@ def plot_psycho_chrono(dset_test, dset_gp, filters, axes, early_licks):
         .groupby('sig').agg({'rt_change': 'median'})
     )
 
-    hplot = axes[1].plot(hitrt_test, '--.', dashes=(4,4),
+    hplot = axes[1].plot(hitrt_test, '--.', dashes=(4, 4),
                          color=[1.0, 0.1, 0.1], ms=4)
     for hline in hplot:
         hline.set_clip_on(False)
@@ -141,13 +142,13 @@ def plot_psycho_chrono(dset_test, dset_gp, filters, axes, early_licks):
     for i, (hazard, dset_group) in enumerate(dset_test.groupby('hazard')):
         rt_range = np.linspace(0, 16, num=161) / period
         rt_test = np.sort(dset_group[~dset_group['miss']]['rt'].values)
-        cdf_test = np.mean(rt_test[:, np.newaxis] <= rt_range, axis=0)
-        
+        # cdf_test = np.mean(rt_test[:, np.newaxis] <= rt_range, axis=0)
+
         kernel = gaussian_kde(rt_test)
         kde_test = kernel(rt_range)
 
         axes[2].plot(rt_range * period, kde_test, '--',
-                     dashes=(4, 4), color=cmap[i]) 
+                     dashes=(4, 4), color=cmap[i])
         plot_rt_kde(dset_gp[dset_gp.hazard == hazard], rt_range, period,
                     color=cmap[i], ax=axes[2])
 
@@ -183,7 +184,7 @@ def load_filters(model_path):
 
     # flip to make bigger deviation positive
     mask_idx = np.arange(filters.shape[1])
-    flip_mask = filters[np.abs(filters[0:10,:]).argmax(0), mask_idx] < 0
+    flip_mask = filters[np.abs(filters[0:10, :]).argmax(0), mask_idx] < 0
     filters[:, flip_mask] = -filters[:, flip_mask]
 
     return filters
@@ -266,7 +267,9 @@ def main(fname, *, supplement=False, early_licks=False, all_splits=False):
                 dset_test, dset_gp, gp_filters, axes[idx, :], early_licks
             )
         else:
-            plot_psycho_chrono(dset_test, dset_gp, gp_filters, axes, early_licks)
+            plot_psycho_chrono(
+                dset_test, dset_gp, gp_filters, axes, early_licks
+            )
 
     sb.despine(fig, offset=3, trim=False)
     fig.tight_layout()
