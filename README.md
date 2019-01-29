@@ -47,11 +47,12 @@ To reproduce the figures from the paper, you will also need the corresponding
 data available on [figshare](https://figshare.com/s/45f53f720d75498ac3c4).
 Unzip the `data` and `results` folders directly into the repository folder.
 
+
 ## Code organisation
 
 Provided scripts in `src` folder are:
 
-- `plot_draft_paper.py` generates the figures for the paper,
+- `plot_orsolic_paper.py` generates the figures for the paper,
 - `gp_fit.py` fits the parameters of a Gaussian process model on behavioral
   data,
 - `gp_predict.py` estimates predictive distributions from fitted models,
