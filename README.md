@@ -1,9 +1,11 @@
 # Reaction-time modeling with Gaussian process models
 
 This repository contains code to analysis reaction-time from experimental data
-collected by Ivana Orsolici.
+collected by Ivana Orsolic.
 
-TODO mention paper, link to it
+This code accompanies the paper *Mesoscale cortical dynamics reflect the interaction of sensory evidence and temporal expectation during perceptual decision-making*,
+Ivana Orsolic, Maxime Rio, Thomas D. Mrsic-Flogel, Petr Znamenskiy (https://doi.org/10.1101/552026).
+
 
 
 ## Installation
