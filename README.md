@@ -139,3 +139,9 @@ bazel build --config=opt --config=cuda //tensorflow/tools/pip_package:build_pip_
 The final package is saved as `/tmp/tensorflow_pkg/tensorflow-1.9.0-<tags>.whl`
 and can be installed with `pip install <package path>`. You should uninstall
 any version of tensorflow before, e.g. using `pip uninstall tensorflow-gpu`.
+
+
+## License
+
+This project is published under the MIT License. See the [LICENSE](LICENSE) file
+for details.
